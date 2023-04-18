@@ -1,6 +1,4 @@
 import 'dart:io';
-
-import 'package:flutter/foundation.dart';
 import 'package:qr_code_scanner/qr_code_scanner.dart';
 import 'package:flutter/material.dart';
 
@@ -16,8 +14,6 @@ class _QRViewPageState extends State<QRViewPage> {
   Barcode? result;
   QRViewController? controller;
 
-  // In order to get hot relo9ad to work we need to pause the camera if the platform
-  // is android, or resume the camera if the platform is iOS.
   @override
   void reassemble() {
     super.reassemble();
@@ -31,24 +27,49 @@ class _QRViewPageState extends State<QRViewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 5,
-            child: QRView(
-              key: qrKey,
-              onQRViewCreated: _onQRViewCreated,
-            ),
-          ),
-          Expanded(
-            flex: 1,
-            child: Center(
-              child: (result != null)
-                  ? Text(
-                  'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-                  : Text('Scan a code'),
+      body: Stack(
+        alignment: Alignment.center,
+        fit: StackFit.expand,
+        children: [
+          SingleChildScrollView(
+            physics: const NeverScrollableScrollPhysics(),
+            child: Column(
+              children: [
+                Container(
+                  height: 100,
+                  width: double.infinity,
+                  color: Colors.deepPurple,
+                ),
+                SizedBox(
+                  height: 700,
+                  width: double.infinity,
+                  child: QRView(
+                    overlay: QrScannerOverlayShape(
+                        borderWidth: 20,
+                        borderColor: Colors.deepPurple,
+                        borderRadius: 20
+                    ),
+                    key: qrKey,
+                    onQRViewCreated: _onQRViewCreated,
+                  )
+                ),
+                Container(
+                  height: 400,
+                  width: double.infinity,
+                  color: Colors.deepPurple,
+                ),
+              ],
             ),
           )
+          // Expanded(
+          //   flex: 1,
+          //   child: Center(
+          //     child: (result != null)
+          //         ? Text(
+          //         'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
+          //         : Text('Scan a code'),
+          //   ),
+          // )
         ],
       ),
     );
