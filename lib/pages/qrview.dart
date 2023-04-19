@@ -36,33 +36,29 @@ class _QRViewPageState extends State<QRViewPage> {
             child: Column(
               children: [
                 Container(
-                  height: 100,
+                  height: MediaQuery.of(context).size.height * 0.1,
                   width: double.infinity,
                   color: Colors.deepPurple,
                 ),
                 SizedBox(
-                  height: 700,
+                  height: MediaQuery.of(context).size.height  * 0.9,
                   width: double.infinity,
                   child: QRView(
                     overlay: QrScannerOverlayShape(
                         borderWidth: 20,
+                        borderRadius: 20,
                         borderColor: Colors.deepPurple,
-                        borderRadius: 20
+                        cutOutBottomOffset: 100,
                     ),
                     key: qrKey,
                     onQRViewCreated: _onQRViewCreated,
                   )
                 ),
-                Container(
-                  height: 600,
-                  width: double.infinity,
-                  color: Colors.deepPurple,
-                ),
               ],
             ),
           ),
           Container(
-            height: 600,
+            height: MediaQuery.of(context).size.height  * 1,
             width: double.infinity,
             color: Colors.transparent,
             child: Center(
