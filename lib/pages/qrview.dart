@@ -54,22 +54,23 @@ class _QRViewPageState extends State<QRViewPage> {
                   )
                 ),
                 Container(
-                  height: 400,
+                  height: 600,
                   width: double.infinity,
                   color: Colors.deepPurple,
                 ),
               ],
             ),
-          )
-          // Expanded(
-          //   flex: 1,
-          //   child: Center(
-          //     child: (result != null)
-          //         ? Text(
-          //         'Barcode Type: ${describeEnum(result!.format)}   Data: ${result!.code}')
-          //         : Text('Scan a code'),
-          //   ),
-          // )
+          ),
+          Container(
+            height: 600,
+            width: double.infinity,
+            color: Colors.transparent,
+            child: Center(
+              child: (result != null)
+                  ? Text('${result!.code}', style: const TextStyle(color: Colors.white))
+                  : const Text('Scan a code', style: TextStyle(color: Colors.white)),
+            ),
+          ),
         ],
       ),
     );
@@ -77,7 +78,11 @@ class _QRViewPageState extends State<QRViewPage> {
 
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
-    controller.scannedDataStream.listen((scanData) {
+    controller.scannedDataStream.listen((scanData) async {
+      if(scanData.code?.length == 10){
+        await controller.pauseCamera();
+      }
+
       setState(() {
         result = scanData;
       });
