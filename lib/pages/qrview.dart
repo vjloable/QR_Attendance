@@ -75,7 +75,7 @@ class _QRViewPageState extends State<QRViewPage> {
   void _onQRViewCreated(QRViewController controller) {
     this.controller = controller;
     controller.scannedDataStream.listen((scanData) async {
-      if(scanData.code?.length == 10){
+      if(scanData.code!.length >= 9){
         await controller.pauseCamera();
       }
 
