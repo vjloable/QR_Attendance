@@ -44,39 +44,40 @@ class DefaultFirebaseOptions {
   }
 
   static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyAoOmgARnt9IAkbDKy_nWWNPIjpj6g52AI',
-    appId: '1:231312412287:web:b2767c647004ddaa6d794a',
-    messagingSenderId: '231312412287',
-    projectId: 'angel-qr',
-    authDomain: 'angel-qr.firebaseapp.com',
-    storageBucket: 'angel-qr.appspot.com',
+    apiKey: 'AIzaSyA_gqYfaAAQgiNFGqC6UaDBwRcwPaH8TFk',
+    appId: '1:572346457102:web:fc89e15baecba15c6ab05f',
+    messagingSenderId: '572346457102',
+    projectId: 'dotillos-attendance',
+    authDomain: 'dotillos-attendance.firebaseapp.com',
+    storageBucket: 'dotillos-attendance.appspot.com',
+    measurementId: 'G-9TTBKJY8RY',
   );
 
   static const FirebaseOptions android = FirebaseOptions(
-    apiKey: 'AIzaSyAyg3FTq1A5Lb9Z5GWs8Bus8N9dS73Ovdg',
-    appId: '1:231312412287:android:957856d936b73f7f6d794a',
-    messagingSenderId: '231312412287',
-    projectId: 'angel-qr',
-    storageBucket: 'angel-qr.appspot.com',
+    apiKey: 'AIzaSyCIhQ8JC-aZtoo-uq_okGntUI5qhEobxSw',
+    appId: '1:572346457102:android:baa7ca962bd761556ab05f',
+    messagingSenderId: '572346457102',
+    projectId: 'dotillos-attendance',
+    storageBucket: 'dotillos-attendance.appspot.com',
   );
 
   static const FirebaseOptions ios = FirebaseOptions(
-    apiKey: 'AIzaSyDeKpjVDFJ7_9CW1r1uK1LNng6VIgNdUJs',
-    appId: '1:231312412287:ios:2e26299cf10abf206d794a',
-    messagingSenderId: '231312412287',
-    projectId: 'angel-qr',
-    storageBucket: 'angel-qr.appspot.com',
-    iosClientId: '231312412287-c1kqr4d5uu1egf0f5ta86h2pa75nhp7d.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBalTQvRAZLW28RpkK83QYkkM4S8B2urqE',
+    appId: '1:572346457102:ios:57ff786e7577e4746ab05f',
+    messagingSenderId: '572346457102',
+    projectId: 'dotillos-attendance',
+    storageBucket: 'dotillos-attendance.appspot.com',
+    iosClientId: '572346457102-eduga1q4stsll7nf0va17qv4c7jbqabq.apps.googleusercontent.com',
     iosBundleId: 'com.qrattendance.attendance',
   );
 
   static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyDeKpjVDFJ7_9CW1r1uK1LNng6VIgNdUJs',
-    appId: '1:231312412287:ios:2e26299cf10abf206d794a',
-    messagingSenderId: '231312412287',
-    projectId: 'angel-qr',
-    storageBucket: 'angel-qr.appspot.com',
-    iosClientId: '231312412287-c1kqr4d5uu1egf0f5ta86h2pa75nhp7d.apps.googleusercontent.com',
+    apiKey: 'AIzaSyBalTQvRAZLW28RpkK83QYkkM4S8B2urqE',
+    appId: '1:572346457102:ios:57ff786e7577e4746ab05f',
+    messagingSenderId: '572346457102',
+    projectId: 'dotillos-attendance',
+    storageBucket: 'dotillos-attendance.appspot.com',
+    iosClientId: '572346457102-eduga1q4stsll7nf0va17qv4c7jbqabq.apps.googleusercontent.com',
     iosBundleId: 'com.qrattendance.attendance',
   );
 }

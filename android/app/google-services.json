@@ -1,41 +1,34 @@
 {
   "project_info": {
-    "project_number": "231312412287",
-    "project_id": "angel-qr",
-    "storage_bucket": "angel-qr.appspot.com"
+    "project_number": "572346457102",
+    "project_id": "dotillos-attendance",
+    "storage_bucket": "dotillos-attendance.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:231312412287:android:957856d936b73f7f6d794a",
+        "mobilesdk_app_id": "1:572346457102:android:baa7ca962bd761556ab05f",
         "android_client_info": {
           "package_name": "com.qrattendance.attendance"
         }
       },
       "oauth_client": [
         {
-          "client_id": "231312412287-6c6nhjg8d5rgchkii7ege0uq8vlkadn6.apps.googleusercontent.com",
+          "client_id": "572346457102-7tkf23e1cg3i604md5nnsjcc9id423u4.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyAyg3FTq1A5Lb9Z5GWs8Bus8N9dS73Ovdg"
+          "current_key": "AIzaSyCIhQ8JC-aZtoo-uq_okGntUI5qhEobxSw"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "231312412287-6c6nhjg8d5rgchkii7ege0uq8vlkadn6.apps.googleusercontent.com",
+              "client_id": "572346457102-7tkf23e1cg3i604md5nnsjcc9id423u4.apps.googleusercontent.com",
               "client_type": 3
-            },
-            {
-              "client_id": "231312412287-c1kqr4d5uu1egf0f5ta86h2pa75nhp7d.apps.googleusercontent.com",
-              "client_type": 2,
-              "ios_info": {
-                "bundle_id": "com.qrattendance.attendance"
-              }
             }
           ]
         }
