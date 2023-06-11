@@ -7,7 +7,10 @@ import 'firebase_options.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Permission.camera.request();
+  await [
+    Permission.sms,
+    Permission.camera,
+  ].request();
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
