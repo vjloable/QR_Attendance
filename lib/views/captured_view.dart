@@ -1,13 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:attendance/controllers/sms_controller.dart';
+import 'package:attendance/models/attendance_model.dart';
 import 'package:attendance/models/student_model.dart';
+import 'package:attendance/views/sms_alert_dialog.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance/controllers/capture_controller.dart';
 import 'package:attendance/models/qr_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:background_sms/background_sms.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 class CapturedView extends StatefulWidget {
   final CaptureController captureController;
@@ -24,33 +25,39 @@ class _CapturedViewState extends State<CapturedView> {
   late Map<String, dynamic> studentMap;
   QRModel studentQR = QRModel('', '');
   FirebaseFirestore firebaseFirestore = FirebaseFirestore.instance;
-  Future<bool> _isPermissionGranted() async => await Permission.sms.status.isGranted;
-  Future<bool?> get _supportCustomSim async => await BackgroundSms.isSupportCustomSim;
-
-  void _getPermission() async {
-    await [
-      Permission.sms,
-    ].request();
-  }
-
-  void _sendMessage(String phoneNumber, String message, {int? simSlot}) async {
-    var result = await BackgroundSms.sendMessage(
-        phoneNumber: phoneNumber, message: message, simSlot: simSlot);
-    if (result == SmsStatus.sent) {
-      print("Sent");
-    } else {
-      print("Failed");
-    }
-  }
+  SMSController smsController = SMSController();
 
   void _initStudentDetails() {
-    try {
-      studentMap = jsonDecode(widget.captureController.getBarcodes().first.rawValue.toString());
-      studentQR = QRModel.fromJson(studentMap);
-    } on FormatException {
-      debugPrint('Error: Wrong QR details to be parsed!');
+    if (mounted) {
+      try {
+        studentMap = jsonDecode(widget.captureController.getBarcodes().first.rawValue.toString());
+        studentQR = QRModel.fromJson(studentMap);
+      } on FormatException {
+        debugPrint('Error: Wrong QR details to be parsed!');
+        widget.captureController.flagError();
+      }
+    } else {
       widget.captureController.flagError();
     }
+  }
+
+  void addDataStore(StudentModel student, CaptureController captured) async {
+    final sectionRef = firebaseFirestore.collection("sections").doc(studentQR.sectionID.toString());
+    final attendance = AttendanceModel(
+      id: student.id.toString(),
+      studentId: student.studentId.toString(),
+      date: captured.date,
+      time: captured.time,
+      status: captured.getStatus(),
+    );
+    final docRef = sectionRef
+        .collection("attendance")
+        .withConverter(
+      fromFirestore: AttendanceModel.fromFirestore,
+      toFirestore: (AttendanceModel attendance, options) => attendance.toFirestore(),
+    ).doc("${attendance.id.toString()}-${attendance.date.toString()}");
+    await docRef.set(attendance, SetOptions(merge: true));
+    print("DEBUG: Entered Onpressed");
   }
 
   Future<StudentModel?> readDataStore() async {
@@ -75,6 +82,7 @@ class _CapturedViewState extends State<CapturedView> {
   @override
   void initState() {
     _initStudentDetails();
+    smsController.getSharedPreferences();
     readDataStore();
     super.initState();
   }
@@ -99,264 +107,314 @@ class _CapturedViewState extends State<CapturedView> {
                     builder: (context, snapshot) {
                       return snapshot.hasData
                       ? snapshot.data != null
-                          ? Container(
-                            decoration: BoxDecoration(
-                              border: Border.all(color: Colors.grey, width: 1),
-                              borderRadius: const BorderRadius.all(Radius.circular(10)),
-                              color: Colors.grey.shade100,
-                            ),
-                            width: MediaQuery.sizeOf(context).width * 0.8,
-                            child: Padding(
-                              padding: const EdgeInsets.all(15.0),
-                              child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.start,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Center(child: Icon(Icons.info_outline, size: 100, color: Colors.grey.shade700)),
-                                    const SizedBox(height: 10),
-                                    const Center(
-                                      child: Text(
-                                        'STUDENT INFORMATION',
-                                        style: TextStyle(
-                                          color: Colors.black,
-                                          fontSize: 26,
-                                          fontWeight: FontWeight.w700,
+                          ? Material(
+                            elevation: 3,
+                            borderRadius: const BorderRadius.all(Radius.circular(10)),
+                            color: Colors.grey.shade100,
+                            child: SizedBox(
+                              width: MediaQuery.sizeOf(context).width * 0.8,
+                              child: Padding(
+                                padding: const EdgeInsets.all(15.0),
+                                child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.start,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Center(child: Icon(Icons.info_outline, size: 100, color: Colors.grey.shade700)),
+                                      const SizedBox(height: 10),
+                                      const Center(
+                                        child: Text(
+                                          'STUDENT INFORMATION',
+                                          style: TextStyle(
+                                            color: Colors.black,
+                                            fontSize: 26,
+                                            fontWeight: FontWeight.w700,
+                                          ),
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                                      child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Name:         ',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.firstName.toString()} ${snapshot.data?.middleName.toString()} ${snapshot.data?.lastName.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'ID Number:',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.studentId.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Birthdate:   ',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.birthDate.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Section ID: ',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.sectionId.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                                      child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Parents:',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '    ${snapshot.data?.fatherName.toString()}  &  ${snapshot.data?.motherName.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.start,
-                                      children: [
-                                        const Text(
-                                          'Contact #:  ',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.contactNumber.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Row(
-                                      children: [
-                                        const Text(
-                                          'Address:     ',
-                                          style: TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 10),
-                                        Text(
-                                          '${snapshot.data?.address.toString()}',
-                                          style: const TextStyle(
-                                            color: Colors.black,
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.w400,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(horizontal: 3),
-                                      child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
-                                    ),
-                                    const SizedBox(height: 11),
-                                    Center(
-                                      child: Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                      const SizedBox(height: 11),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                                        child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
                                           const Text(
-                                            'STATUS:',
+                                            'Name:         ',
                                             style: TextStyle(
                                               color: Colors.black,
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
-                                          const SizedBox(height: 15),
-                                          Icon(widget.captureController.getStatusIconData(), size: 40, color: widget.captureController.getStatusColor()),
+                                          const SizedBox(width: 10),
                                           Text(
-                                            widget.captureController.getStatus(),
-                                            style: TextStyle(
-                                              color: widget.captureController.getStatusColor(),
-                                              fontSize: 30,
-                                              fontWeight: FontWeight.bold,
+                                            '${snapshot.data?.firstName.toString()} ${snapshot.data?.middleName.toString()} ${snapshot.data?.lastName.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
                                             ),
                                           ),
                                         ],
                                       ),
-                                    ),
-                                    const SizedBox(height: 25),
-                                    SizedBox(
-                                      height: 60,
-                                      child: Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
                                         children: [
-                                          Material(
-                                            elevation: 5,
-                                            borderRadius: const BorderRadius.all(Radius.circular(10)),
-                                            color: Colors.deepOrange,
-                                            child: SizedBox(
-                                              width: 90,
+                                          const Text(
+                                            'ID Number:',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '${snapshot.data?.studentId.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Birthdate:   ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '${snapshot.data?.birthDate.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Section ID: ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '${snapshot.data?.sectionId.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                                        child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Parents:',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '    ${snapshot.data?.fatherName.toString()}  &  ${snapshot.data?.motherName.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Contact #:  ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '${snapshot.data?.contactNumber.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Row(
+                                        children: [
+                                          const Text(
+                                            'Address:     ',
+                                            style: TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 10),
+                                          Text(
+                                            '${snapshot.data?.address.toString()}',
+                                            style: const TextStyle(
+                                              color: Colors.black,
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w400,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                                        child: Divider(color: Colors.black.withOpacity(0.3), thickness: 1),
+                                      ),
+                                      const SizedBox(height: 11),
+                                      Center(
+                                        child: Padding(
+                                          padding: const EdgeInsets.all(8.0),
+                                          child: Column(
+                                            mainAxisAlignment: MainAxisAlignment.center,
+                                            children: [
+                                              const Text(
+                                                'STATUS:',
+                                                style: TextStyle(
+                                                  color: Colors.black,
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 15),
+                                              Icon(widget.captureController.getStatusIconData(), size: 40, color: widget.captureController.getStatusColor()),
+                                              Text(
+                                                widget.captureController.getStatus(),
+                                                style: TextStyle(
+                                                  color: widget.captureController.getStatusColor(),
+                                                  fontSize: 30,
+                                                  fontWeight: FontWeight.bold,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 25),
+                                      SizedBox(
+                                        height: 60,
+                                        child: Row(
+                                          mainAxisAlignment: MainAxisAlignment.center,
+                                          children: [
+                                            Material(
+                                              elevation: 5,
+                                              borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                              color: Colors.deepOrange,
                                               child: SizedBox(
-                                                height: 50,
-                                                width: 50,
-                                                child: IconButton(
-                                                  splashRadius: 30,
-                                                  color: Colors.white,
-                                                  icon: const Icon(Icons.keyboard_return, color: Colors.white),
-                                                  iconSize: 32.0,
-                                                  onPressed: () async {
-                                                    widget.captureController.flagScanning();
-                                                  },
+                                                width: 90,
+                                                child: SizedBox(
+                                                  height: 50,
+                                                  width: 50,
+                                                  child: IconButton(
+                                                    splashRadius: 30,
+                                                    color: Colors.white,
+                                                    icon: const Icon(Icons.keyboard_return, color: Colors.white),
+                                                    iconSize: 32.0,
+                                                    onPressed: () async {
+                                                      widget.captureController.flagScanning();
+                                                    },
+                                                  ),
                                                 ),
                                               ),
                                             ),
-                                          ),
-                                        ],
+                                            Spacer(),
+                                            Material(
+                                              elevation: 5,
+                                              borderRadius: const BorderRadius.all(Radius.circular(10)),
+                                              color: Colors.deepOrange,
+                                              child: SizedBox(
+                                                width: 90,
+                                                child: SizedBox(
+                                                  height: 50,
+                                                  width: 50,
+                                                  child: IconButton(
+                                                    splashRadius: 30,
+                                                    color: Colors.white,
+                                                    icon: const Icon(Icons.check, color: Colors.white),
+                                                    iconSize: 32.0,
+                                                    onPressed: () async {
+                                                      print("DEBUG: Entered Onpressed");
+                                                      print(snapshot.data!.contactNumber.toString());
+                                                      addDataStore(snapshot.data!, widget.captureController);
+                                                      String msg = smsController.message(snapshot.data!, widget.captureController.timeFull, widget.captureController.date, widget.captureController.getStatus());
+                                                      print(msg.length);
+                                                      // String test = "Attendance Notice []:\nSection ID: \nStudent ID: \nYour son/daughter,  has entered school at  time and was marked  in class.\n\nSent via SMS Automated Attendance Checker\n(Do not reply)";
+                                                      // String test = "Attendance Notice [${widget.captureController.date}]:\nSection ID: ${snapshot.data!.sectionId}\nStudent ID: ${snapshot.data!.studentId}\nYour son/daughter, ${snapshot.data!.firstName} has entered school at ${widget.captureController.timeFull} time and was marked ${widget.captureController.getStatus()} in class.\n\nSent via SMS Automated Attendance Checker\n(Do not reply)";
+                                                      if (await smsController.isSMSPermissionGranted()) {
+                                                        if ((await smsController.supportCustomSim)!){
+                                                          smsController.sendMessage(snapshot.data!.contactNumber.toString().trim(), msg, simSlot: 2).then((value) {
+                                                            print(value);
+                                                            showDialog(context: context, builder: (context) {
+                                                              return SMSAlertDialog(captureController: widget.captureController, isSent: value);
+                                                            });
+                                                          });
+                                                        } else {
+                                                          smsController.sendMessage(snapshot.data!.contactNumber.toString().trim(), msg).then((value) {
+                                                            print(value);
+                                                            showDialog(context: context, builder: (context) {
+                                                              return SMSAlertDialog(captureController: widget.captureController, isSent: value);
+                                                            });
+                                                          });
+                                                        }
+                                                      } else{
+                                                        smsController.getSMSPermission();
+                                                      }
+                                                    },
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                  ],
-                                ),
+                                    ],
+                                  ),
+                              ),
                             ),
                           )
                           : Container()
