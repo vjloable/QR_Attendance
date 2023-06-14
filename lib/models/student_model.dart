@@ -35,18 +35,18 @@ class StudentModel {
       ) {
     final data = snapshot.data();
     return StudentModel(
-      address: data?['address'],
-      birthDate: data?['birthDate'],
-      contactNumber: data?['contactNumber'],
-      fatherName: data?['fatherName'],
-      firstName: data?['firstName'],
-      id: data?['id'],
-      lastName: data?['lastName'],
-      middleName: data?['middleName'],
-      motherName: data?['motherName'],
-      qrCode: data?['qrCode'],
-      sectionId: data?['sectionId'],
-      studentId: data?['studentId'],
+      address: data?['address'].toString(),
+      birthDate: data?['birthDate'].toString(),
+      contactNumber: data?['contactNumber'].toString(),
+      fatherName: data?['fatherName'].toString(),
+      firstName: data?['firstName'].toString(),
+      id: data?['id'].toString(),
+      lastName: data?['lastName'].toString(),
+      middleName: data?['middleName'].toString(),
+      motherName: data?['motherName'].toString(),
+      qrCode: data?['qrCode'].toString(),
+      sectionId: data?['sectionId'].toString(),
+      studentId: data?['studentId'].toString(),
     );
   }
 
