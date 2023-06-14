@@ -1,3 +1,5 @@
+import 'package:attendance/controllers/sms_controller.dart';
+import 'package:attendance/views/settings_subview.dart';
 import 'package:flutter/material.dart';
 import 'package:attendance/controllers/capture_controller.dart';
 import 'package:attendance/views/captured_view.dart';
@@ -16,9 +18,11 @@ class _QRViewPageState extends State<QRViewPage> {
   Color isScanned = Colors.deepOrange;
   CaptureController captureController = CaptureController();
   ValueNotifier<bool> statusOnTime = ValueNotifier<bool>(true);
+  SMSController smsController = SMSController();
 
   @override
   void initState() {
+    smsController.getSharedPreferences();
     captureController.flagScanning();
     super.initState();
   }
@@ -61,13 +65,40 @@ class _QRViewPageState extends State<QRViewPage> {
                         Future.delayed(const Duration(milliseconds: 700), () async {
                           captureController.flagCaptured(barcodes: barcodes);
                           captureController.setStatus(statusOnTime.value);
+                          captureController.recordTimestamp();
                           cameraController.dispose();
                         });
                       },
                     ),
                   ),
                   Positioned(
-                    top: 40,
+                    top: 45,
+                    left: 10,
+                    child: SizedBox(
+                      height: 40,
+                      width: 40,
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.settings,
+                          color: Colors.white,
+                        ),
+                        onPressed: () {
+                          // SMSController.defaultSim = smsController.getDefaultSim();
+                          showModalBottomSheet(
+                              context: context,
+                              builder: (context) {
+                                return SettingsSubview(smsController: smsController);
+                              },
+                          );
+                          // smsController.setDefaultSim(SMSController.defaultSim!);
+                        },
+                        iconSize: 35.0,
+                        splashRadius: 40,
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    top: 50,
                     child: Material(
                       color: Colors.deepOrange,
                       shape: const RoundedRectangleBorder(
