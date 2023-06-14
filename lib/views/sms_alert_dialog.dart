@@ -1,10 +1,17 @@
 import 'package:attendance/controllers/capture_controller.dart';
+import 'package:attendance/models/student_model.dart';
 import 'package:flutter/material.dart';
 
 class SMSAlertDialog extends StatefulWidget {
   final bool isSent;
   final CaptureController captureController;
-  const SMSAlertDialog({super.key, required this.captureController, required this.isSent});
+  final StudentModel? studentModel;
+  const SMSAlertDialog({
+    super.key,
+    required this.captureController,
+    required this.isSent,
+    this.studentModel,
+  });
 
   @override
   State<SMSAlertDialog> createState() => _SMSAlertDialogState();
@@ -14,73 +21,76 @@ class _SMSAlertDialogState extends State<SMSAlertDialog> {
   @override
   Widget build(BuildContext context) {
     return Center(
+      heightFactor: 0.5,
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: Colors.white, width: 1),
-          borderRadius: const BorderRadius.all(Radius.circular(10)),
+          borderRadius: const BorderRadius.all(Radius.circular(20)),
           color: Colors.white,
         ),
-        width: MediaQuery.sizeOf(context).width * 0.8,
-        height: MediaQuery.sizeOf(context).width * 0.8 + 100,
+        width: MediaQuery.sizeOf(context).width * 0.9,
+        height: MediaQuery.sizeOf(context).height * 0.3,
         child: Padding(
-          padding: const EdgeInsets.all(15.0),
+          padding: const EdgeInsets.all(30.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(
-                widget.isSent ? Icons.check_circle : Icons.error,
-                size: 180, color: widget.isSent ? Colors.green : Colors.red,
+            Center(
+              child: Icon(
+                widget.isSent ? Icons.check_circle_outline_outlined : Icons.error,
+                size: 60, color: widget.isSent ? Colors.green : Colors.red,
               ),
-              const SizedBox(height: 10),
-              Text(
-                widget.isSent ? 'SUCCESS: SMS Sent!' : 'ERROR:\nSMS Not Sent!',
+            ),
+            const SizedBox(height: 10),
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                widget.isSent
+                    ? 'SMS has been sent to ${widget.studentModel?.contactNumber.toString()}'
+                    : 'SMS has not been sent',
                 style: TextStyle(
                   color: Colors.black.withOpacity(0.5),
                   fontSize: 29,
                   fontWeight: FontWeight.bold,
                 ),
-                textAlign: TextAlign.center,
+                textAlign: TextAlign.justify,
               ),
-              // Text(
-              //   'NOT FOUND!',
-              //   style: TextStyle(
-              //     color: Colors.white.withOpacity(0.5),
-              //     fontSize: 26,
-              //     fontWeight: FontWeight.bold,
-              //   ),
-              //   textAlign: TextAlign.center,
-              // ),
-              const SizedBox(height: 40),
-              SizedBox(
-                height: 60,
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Material(
-                      elevation: 5,
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: Colors.white,
-                      child: SizedBox(
-                        width: 70,
-                        child: SizedBox(
-                          height: 50,
-                          width: 50,
-                          child: IconButton(
-                            splashRadius: 30,
-                            color: Colors.deepOrange,
-                            icon: const Icon(Icons.close, color: Colors.deepOrange),
-                            iconSize: 32.0,
-                            onPressed: () async {
-                              widget.captureController.flagScanning();
-                            },
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+            ),
+            const SizedBox(height: 10),
+            FittedBox(
+              fit: BoxFit.fitWidth,
+                child: Text(
+                  widget.isSent
+                      ? 'For changes, go to the administrators\' page.'
+                      : 'It might be due to invalid phone number,\nor unavailable sim.',
+                  style: TextStyle(
+                    color: Colors.black.withOpacity(0.5),
+                    fontSize: 22,
+                    fontWeight: FontWeight.w300,
+                  ),
+                  textAlign: TextAlign.left,
                 ),
               ),
-            ],
+            const Spacer(),
+            Center(
+              child: SizedBox(
+                height: 50,
+                width: 100,
+                child: TextButton(
+                  onPressed: () {
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      Navigator.pop(context);
+                    });
+                    Future.delayed(const Duration(milliseconds: 100), () {
+                      widget.captureController.flagScanning();
+                    });
+                  },
+                  child: const Text('CLOSE', style: TextStyle(color: Colors.deepOrange, fontSize: 17)),
+                ),
+              ),
+            ),
+          ],
           ),
         ),
       ),
