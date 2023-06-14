@@ -1,11 +1,14 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
 class CaptureController extends ChangeNotifier {
   CaptureState state = CaptureState.scanning;
   List<Barcode> _barcodes = [];
-  StudentState status = StudentState.unmarked;
+  StudentState status = StudentState.absent;
+  String time = "";
+  String date = "";
+  String timeFull = "";
 
   void flagCaptured({required List<Barcode> barcodes}) {
     state = CaptureState.captured;
@@ -53,8 +56,8 @@ class CaptureController extends ChangeNotifier {
         return "LATE";
       case StudentState.onTime:
         return "ON-TIME";
-      case StudentState.unmarked:
-        return "UNMARKED";
+      case StudentState.absent:
+        return "ABSENT";
     }
   }
 
@@ -64,7 +67,7 @@ class CaptureController extends ChangeNotifier {
         return Colors.red;
       case StudentState.onTime:
         return Colors.green;
-      case StudentState.unmarked:
+      case StudentState.absent:
         return Colors.grey;
     }
   }
@@ -75,9 +78,16 @@ class CaptureController extends ChangeNotifier {
         return Icons.timer_off_outlined;
       case StudentState.onTime:
         return Icons.timer;
-      case StudentState.unmarked:
+      case StudentState.absent:
         return Icons.hourglass_empty;
     }
+  }
+
+  void recordTimestamp() {
+    DateTime now = DateTime.now();
+    date = DateFormat("yyyy-MM-dd").format(now).toString();
+    time = DateFormat("HH:mm:ss").format(now).toString();
+    timeFull = DateFormat("HH:mm a").format(now).toString();
   }
 }
 
@@ -91,5 +101,5 @@ enum CaptureState {
 enum StudentState {
   late,
   onTime,
-  unmarked,
+  absent,
 }
